@@ -9,7 +9,7 @@ import propertyRoutes from "./routes/propertyRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import wantedRoutes from "./routes/wantedRoutes.js";
 import areaRoutes from "./routes/areaRoutes.js";
-    
+      
 dotenv.config();    
    
 // connectDB();

@@ -1,4 +1,4 @@
-import Property from "../models/property.js";
+import Property from "../models/Property.js";
 
 // GET ALL PROPERTIES (ADMIN) with filtering
 export const getAllPropertiesAdmin = async (req, res) => {

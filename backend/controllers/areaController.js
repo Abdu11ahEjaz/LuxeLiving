@@ -1,5 +1,5 @@
 import Area from "../models/Area.js";
-import Property from "../models/property.js";
+import Property from "../models/Property.js";
 
 // ============================
 // CREATE AREA (ADMIN)

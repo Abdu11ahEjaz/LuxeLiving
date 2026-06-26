@@ -1,4 +1,4 @@
-import Property from "../models/property.js";
+import Property from "../models/Property.js";
 
 // ============================
 // CREATE PROPERTY (USER)

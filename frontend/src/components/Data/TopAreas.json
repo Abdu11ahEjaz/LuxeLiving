@@ -1,0 +1,101 @@
+{
+  "cities": [
+    {
+      "name": "Islamabad",
+      "areas": [
+        {
+          "name": "DHA Phase 2",
+          "image": "/images/DhaPhase2isb.jpg",
+          "rent": 54,
+          "sale": 611
+        },
+        {
+          "name": "Gulberg Residencia",
+          "image": "/images/Gulbergisb.jpeg",
+          "rent": 17,
+          "sale": 486
+        },
+        {
+          "name": "Jinnah Garden",
+          "image": "/images/jinahgardenisb.jpg",
+          "rent": 11,
+          "sale": 385
+        },
+        {
+          "name": "Multi Garden B-17",
+          "image": "/images/B17isb.jpg",
+          "rent": 0,
+          "sale": 370
+        }
+      ]
+    },
+    {
+      "name": "Rawalpindi",
+      "areas": [
+        {
+          "name": "Bahria Town",
+          "image": "/images/bahriarwp.jpg",
+          "rent": 30,
+          "sale": 200
+        },
+        {
+          "name": "Saddar",
+          "image": "/images/saddarrwp.jpg",
+          "rent": 15,
+          "sale": 150
+        }
+      ]
+    },
+    {
+      "name": "Lahore",
+      "areas": [
+        {
+          "name": "Defence Housing Authority",
+          "image": "/images/dhalahore.jpg",
+          "rent": 25,
+          "sale": 300
+        },
+        {
+          "name": "Gulberg",
+          "image": "/images/gulberglahore.jpeg",
+          "rent": 20,
+          "sale": 250
+        }
+      ]
+    },
+    {
+      "name": "Karachi",
+      "areas": [
+        {
+          "name": "Clifton",
+          "image": "/images/cliftonkarachi.jpeg",
+          "rent": 40,
+          "sale": 400
+        },
+        {
+          "name": "Defence Housing Authority",
+          "image": "/images/dhakarachi.jpg",
+          "rent": 35,
+          "sale": 350
+        }
+      ]
+    },
+    {
+      "name": "Peshawar",
+      "areas": [
+        {
+          "name": "University Town",
+          "image": "/images/universitytownpeshawar.jpeg",
+          "rent": 10,
+          "sale": 100
+        },
+        {
+          "name": "Hayatabad",
+          "image": "/images/hayatabadpeshawar.jpg",
+          "rent": 8,
+          "sale": 90
+        }
+      ]
+    }
+  ]
+}

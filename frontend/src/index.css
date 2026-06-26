@@ -1,0 +1,42 @@
+@import "tailwindcss"; 
+
+/* Custom animation for mobile menu */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out forwards;
+}
+
+/* Custom colors for Switch component */
+.bg-primary {
+  background-color: #2B8A6E;
+}
+
+.bg-input {
+  background-color: #e5e7eb;
+}
+
+/* Hide scrollbar but keep scrolling functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* @theme {
+ --breakpoint-xxs:320px;
+ --breakpoint-xs:480px;
+ 
+} */

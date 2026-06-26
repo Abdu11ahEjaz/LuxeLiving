@@ -6,13 +6,13 @@ import { Sell } from "./pages/Sell.jsx";
 import { AppLayout } from "./components/Layout/AppLayout.jsx";
 import { ErrorPage } from "./pages/ErrorPage.jsx";
 import { Rent } from "./pages/Rent.jsx";
-import SignIn from "./pages/Signin.jsx";
+import SignIn from "./pages/SignIn.jsx";
 import SignUp from "./pages/Signup.jsx";
 import Wanted from "./pages/Wanted.jsx";
 import Profile from "./pages/Profile.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AreaGuide from "./pages/AreaGuide.jsx";
-
+ 
 import "./App.css";
 
 const router = createBrowserRouter([

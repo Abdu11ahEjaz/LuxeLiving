@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 import {
   Search,
   Home,
@@ -78,7 +80,7 @@ const SellProperty = ({ initialPurpose = "sell" }) => {
     if (formData.city) {
       setLoadingAreas(true);
       axios
-        .get(`http://localhost:5000/api/areas/city/${encodeURIComponent(formData.city)}`)
+        .get(`${API_BASE_URL}/api/areas/city/${encodeURIComponent(formData.city)}`)
         .then((res) => {
           setAvailableAreas(res.data.map((area) => area.name));
           setAreaDropdownOpen(true);
@@ -432,7 +434,7 @@ const SellProperty = ({ initialPurpose = "sell" }) => {
       console.log("📤 Sending property data...");
 
       const response = await axios.post(
-        "http://localhost:5000/api/properties",
+        `${API_BASE_URL}/api/properties`,
         formDataToSend,
         {
           headers: {

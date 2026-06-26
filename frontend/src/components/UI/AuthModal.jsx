@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 
-const API_BASE_URL = "http://localhost:5000/api/auth";
+const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/auth` : "http://localhost:5000/api/auth";
 
 export const AuthModal = ({ isOpen, onClose, initialMode = "signin" }) => {
   const [mode, setMode] = useState(initialMode); // "signin" or "signup"

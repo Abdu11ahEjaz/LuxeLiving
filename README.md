@@ -1,6 +1,6 @@
-# Estate Edge - Real Estate Platform
+# LuxeLiving - Real Estate Platform
 
-A modern, full-stack real estate management platform built with the MERN stack (MongoDB, Express, React, Node.js). Estate Edge enables property owners to list properties, users to browse and search for properties, and admins to manage the entire platform.
+A modern, full-stack real estate management platform built with the MERN stack (MongoDB, Express, React, Node.js). LuxeLiving enables property owners to list properties, users to browse and search for properties, and admins to manage the entire platform.
 
 ## Table of Contents
 
@@ -67,7 +67,7 @@ A modern, full-stack real estate management platform built with the MERN stack (
 ## Project Structure
 
 ```
-Estate Edge/
+LuxeLiving/
 ├── backend/
 │   ├── config/
 │   │   ├── db.js                 # MongoDB connection

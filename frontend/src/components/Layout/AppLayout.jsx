@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
-import { Headers } from "../UI/Headers";
-import { Footers } from "../UI/Footers";
+import { Headers } from "../UI/Headers.jsx";
+import { Footers } from "../UI/Footers.jsx";
 import Footerimg from '../../components/UI/Footerimg.jsx';
 
 export const AppLayout = () => {

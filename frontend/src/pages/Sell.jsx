@@ -1,7 +1,7 @@
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import SellPageTop from "../components/UI/SellPageTop.jsx"
-import SellProperty from "../components/UI/SellPageForm"
+import SellPageTop from "../components/UI/SellPageTop.jsx";
+import SellProperty from "../components/UI/SellPageForm.jsx";
 
 export const Sell = () => {
     const [searchParams] = useSearchParams();

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
-import Nav_Logo from "../../assets/images/Nav_Logo.png";
+import Nav_Logo from "../../assets/images/Nav_logo.png";
 import AuthModal from "./AuthModal.jsx";
 import { useAuth } from "../../context/AuthContext";
 

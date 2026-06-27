@@ -80,7 +80,7 @@ const SellProperty = ({ initialPurpose = "sell" }) => {
     if (formData.city) {
       setLoadingAreas(true);
       axios
-        .get(`${API_BASE_URL}/api/areas/city/${encodeURIComponent(formData.city)}`)
+        .get(`${API_BASE_URL}/areas/city/${encodeURIComponent(formData.city)}`)
         .then((res) => {
           setAvailableAreas(res.data.map((area) => area.name));
           setAreaDropdownOpen(true);

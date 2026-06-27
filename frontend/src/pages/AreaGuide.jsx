@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ChevronLeft, ChevronRight, MapPin, Home, TrendingUp, DollarSign, FileText } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const AreaGuide = () => {
   const { city, area } = useParams();
@@ -212,77 +212,69 @@ const AreaGuide = () => {
             <div className="mb-12">
               <h3 className="text-2xl font-bold text-gray-800 mb-6">Area Overview</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left Column */}
-                <div>
-                  {/* Rent Increase */}
-                  <div className="mb-8 pb-8 border-b">
-                    <div className="flex items-start gap-3 mb-2">
-                      <TrendingUp className="w-5 h-5 text-gray-600 mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-2xl font-bold text-gray-800">
-                          {areaData.rentIncreasePercentage || 0}% Increase in Rent
-                        </p>
-                        <p className="text-gray-600 text-sm">
-                          Price increase on listings for rent in last 3 months
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Avg Rent per Sq ft */}
-                  <div className="pb-8">
-                    <div className="flex items-start gap-3">
-                      <DollarSign className="w-5 h-5 text-gray-600 mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-2xl font-bold text-gray-800">
-                          {areaData.averageRentPerSqft || 0}
-                        </p>
-                        <p className="text-gray-600 text-sm">
-                          Average Rent per Sq ft in last month
-                        </p>
-                      </div>
+                {/* Rent Increase */}
+                <div className="pb-8">
+                  <div className="flex items-start gap-3">
+                    <TrendingUp className="w-5 h-5 text-gray-600 mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="text-2xl font-bold text-gray-800">
+                        {areaData.rentIncreasePercentage || 0}% Increase in Rent
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        Price increase on listings for rent in last 3 months
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Column */}
-                <div>
-                  {/* Price Range */}
-                  <div className="mb-8 pb-8 border-b">
-                    <div className="flex items-start gap-3 mb-2">
-                      <Home className="w-5 h-5 text-gray-600 mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-2xl font-bold text-gray-800">
-                          {formatPrice(stats?.salePriceRange?.min || 0)} -{" "}
-                          {formatPrice(stats?.salePriceRange?.max || 0)}
-                        </p>
-                        <p className="text-gray-600 text-sm">Price range of Listings</p>
-                      </div>
+                {/* Price Range */}
+                <div className="pb-8">
+                  <div className="flex items-start gap-3">
+                    <Home className="w-5 h-5 text-gray-600 mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="text-2xl font-bold text-gray-800">
+                        {formatPrice(stats?.salePriceRange?.min || 0)} -{" "}
+                        {formatPrice(stats?.salePriceRange?.max || 0)}
+                      </p>
+                      <p className="text-gray-600 text-sm">Price range of Listings</p>
                     </div>
                   </div>
+                </div>
 
-                  {/* Sale Increase & Total Properties */}
-                  <div className="grid grid-cols-2 gap-4">
+                {/* Avg Rent per Sq ft */}
+                <div className="pb-8">
+                  <div className="flex items-start gap-3">
+                    <DollarSign className="w-5 h-5 text-gray-600 mt-1 flex-shrink-0" />
                     <div>
-                      <div className="flex items-start gap-2">
-                        <TrendingUp className="w-4 h-4 text-gray-600 mt-1 flex-shrink-0" />
-                        <div>
-                          <p className="text-lg font-bold text-gray-800">
-                            {areaData.saleIncreasePercentage || 0}%
-                          </p>
-                          <p className="text-gray-600 text-xs">Increase in Sale Price</p>
-                        </div>
+                      <p className="text-2xl font-bold text-gray-800">
+                        PKR {areaData.averageRentPerSqft || 0}
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        Average Rent per Sq ft in last month
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sale Increase & Total Properties */}
+                <div className="pb-8">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="w-5 h-5 text-gray-600 mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="text-2xl font-bold text-gray-800">
+                          {areaData.saleIncreasePercentage || 0}%
+                        </p>
+                        <p className="text-gray-600 text-sm">Increase in Sale Price</p>
                       </div>
                     </div>
-                    <div>
-                      <div className="flex items-start gap-2">
-                        <FileText className="w-4 h-4 text-gray-600 mt-1 flex-shrink-0" />
-                        <div>
-                          <p className="text-lg font-bold text-gray-800">
-                            {stats?.totalProperties || 0}
-                          </p>
-                          <p className="text-gray-600 text-xs">Total Properties</p>
-                        </div>
+                    <div className="flex items-start gap-3">
+                      <FileText className="w-5 h-5 text-gray-600 mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="text-2xl font-bold text-gray-800">
+                          {stats?.totalProperties || 0}
+                        </p>
+                        <p className="text-gray-600 text-sm">Total Properties</p>
                       </div>
                     </div>
                   </div>

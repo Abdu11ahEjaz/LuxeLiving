@@ -71,7 +71,7 @@ const Wanted = () => {
       };
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/properties/wanted`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/properties/wanted`,
         {
           method: "POST",
           headers: {

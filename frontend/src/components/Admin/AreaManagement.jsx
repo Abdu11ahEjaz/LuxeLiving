@@ -4,7 +4,7 @@ import { X, Plus } from "lucide-react";
 import MapEmbed from "../UI/MapEmbed.jsx";
 import { PAKISTANI_CITIES } from "../../constants/cities.js";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const AreaManagement = () => {
   const [areas, setAreas] = useState([]);

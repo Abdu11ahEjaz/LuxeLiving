@@ -12,6 +12,8 @@ import Wanted from "./pages/Wanted.jsx";
 import Profile from "./pages/Profile.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AreaGuide from "./pages/AreaGuide.jsx";
+import PropertyDetail from "./pages/PropertyDetail.jsx";
+import { LoadingProvider } from "./context/LoadingContext.jsx";
    
 import "./App.css"; 
 
@@ -65,12 +67,20 @@ const router = createBrowserRouter([
         path: "area-guide/:city/:area",
         element: <AreaGuide />,
       },
+      {
+        path: "property/:id",
+        element: <PropertyDetail />,
+      },
     ],
   },
 ]);
 
 const App = () => {
-  return <RouterProvider router={router}></RouterProvider>;
+  return (
+    <LoadingProvider>
+      <RouterProvider router={router} />
+    </LoadingProvider>
+  );
 };
 
 export default App;

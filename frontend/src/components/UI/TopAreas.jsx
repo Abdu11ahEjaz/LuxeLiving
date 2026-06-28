@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { usePageLoad } from "../../hooks/usePageLoad.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -14,6 +15,9 @@ const TopAreas = () => {
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState("");
   const [areasWithStats, setAreasWithStats] = useState([]);
+
+  // Show loading animation when fetching areas
+  usePageLoad(loading);
 
   // Fetch available cities on mount
   useEffect(() => {

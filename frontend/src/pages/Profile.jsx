@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { Heart, Home, Edit2, Save, X, Camera } from "lucide-react";
+import { usePageLoad } from "../hooks/usePageLoad.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -27,6 +28,9 @@ const Profile = () => {
     email: user?.email || "",
     phone: user?.phone || "",
   });
+
+  // Show loading animation when fetching user data
+  usePageLoad(loading);
 
   useEffect(() => {
     if (!user) {
@@ -308,6 +312,17 @@ const Profile = () => {
 const PropertyCard = ({ property, formatPrice, isOwner }) => {
   const navigate = useNavigate();
   
+  // Handle images - could be array of strings or array of objects
+  let displayImage = null;
+  if (property?.images && property.images.length > 0) {
+    const firstImage = property.images[0];
+    if (typeof firstImage === 'string') {
+      displayImage = firstImage;
+    } else if (firstImage?.url) {
+      displayImage = firstImage.url;
+    }
+  }
+  
   return (
     <div 
       onClick={() => navigate(`/property/${property._id}`)}
@@ -315,11 +330,15 @@ const PropertyCard = ({ property, formatPrice, isOwner }) => {
     >
       {/* Image */}
       <div className="h-48 bg-gray-200 relative">
-        {property.images && property.images.length > 0 ? (
+        {displayImage ? (
           <img
-            src={property.images[0].url}
-            alt={property.propertyName}
+            src={displayImage}
+            alt={property.title || property.propertyName || "Property"}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400">Image Failed</div>';
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -342,7 +361,7 @@ const PropertyCard = ({ property, formatPrice, isOwner }) => {
           {formatPrice(property.price)}
         </p>
         <h3 className="font-medium text-gray-900 mb-2 line-clamp-1">
-          {property.propertyName || "Property"}
+          {property.title || property.propertyName || "Property"}
         </h3>
         <p className="text-sm text-gray-500 mb-2 line-clamp-1">
           {property.area}, {property.city}
@@ -350,7 +369,7 @@ const PropertyCard = ({ property, formatPrice, isOwner }) => {
         <div className="flex items-center gap-4 text-sm text-gray-500">
           <span>{property.bedrooms} Bed</span>
           <span>{property.bathrooms} Bath</span>
-          <span>{property.size} {property.sizeUnit}</span>
+          <span>{property.areaSize || property.size} {property.areaUnit || property.sizeUnit}</span>
         </div>
       </div>
     </div>

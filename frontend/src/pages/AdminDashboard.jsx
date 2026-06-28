@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import AreaManagement from "../components/Admin/AreaManagement.jsx";
+import { usePageLoad } from "../hooks/usePageLoad.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -15,6 +16,9 @@ const AdminDashboard = () => {
   const [deleting, setDeleting] = useState({});
   const [showMessage, setShowMessage] = useState("");
   const fetchTimeoutRef = useRef(null);
+
+  // Show loading animation when fetching admin data
+  usePageLoad(loading);
 
   // Filter state
   const [filters, setFilters] = useState({

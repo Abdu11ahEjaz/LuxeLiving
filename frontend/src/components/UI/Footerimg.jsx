@@ -18,10 +18,10 @@ const Footerimg = () => {
       w-full 
       overflow-hidden 
       bg-white
-      h-[140px]       /* mobile */
-      sm:h-[170px]    /* small screens */
-      md:h-[200px]    /* tablets */
-      lg:h-[220px]    /* desktop */
+      h-[80px]        /* mobile */
+      sm:h-[100px]    /* small screens */
+      md:h-[120px]    /* tablets */
+      lg:h-[140px]    /* desktop */
     ">
       <img
         src={footerImg}

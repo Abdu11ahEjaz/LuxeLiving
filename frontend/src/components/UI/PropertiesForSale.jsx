@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { usePageLoad } from "../../hooks/usePageLoad.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const PropertiesForSale = () => {
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,6 +15,9 @@ const PropertiesForSale = () => {
   const [imageIndices, setImageIndices] = useState({});
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState("");
+
+  // Show loading animation when fetching properties
+  usePageLoad(loading);
 
   // Fetch properties for sale
   useEffect(() => {
@@ -188,14 +194,22 @@ const PropertiesForSale = () => {
                 const currentImageIndex = imageIndices[property._id] || 0;
                 const hasImages =
                   property.images && property.images.length > 0;
-                const displayImage = hasImages
-                  ? property.images[currentImageIndex].url
-                  : "/images/ground.jpg";
+                let displayImage = "/images/ground.jpg";
+                
+                if (hasImages) {
+                  const currentImage = property.images[currentImageIndex];
+                  if (typeof currentImage === 'string') {
+                    displayImage = currentImage;
+                  } else if (currentImage?.url) {
+                    displayImage = currentImage.url;
+                  }
+                }
 
                 return (
                   <div
                     key={property._id || index}
-                    className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
+                    onClick={() => navigate(`/property/${property._id}`)}
+                    className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
                   >
                     {/* Image with Carousel */}
                     <div className="relative overflow-hidden bg-gray-200 h-40 sm:h-44 lg:h-48 group">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ChevronLeft, ChevronRight, MapPin, Home, TrendingUp, DollarSign, FileText } from "lucide-react";
+import { usePageLoad } from "../hooks/usePageLoad.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -14,6 +15,9 @@ const AreaGuide = () => {
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [filterType, setFilterType] = useState("ALL"); // ALL, Schools, Hospitals, Restaurants
+
+  // Show loading animation when fetching area data
+  usePageLoad(loading);
 
   useEffect(() => {
     const fetchAreaData = async () => {

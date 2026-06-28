@@ -1,27 +1,23 @@
 import { useState, useMemo } from "react";
-import { Search, X, ChevronDown, ChevronUp, Zap, Droplets, Trash2, Check } from "lucide-react";
+import { Search, X, ChevronDown, ChevronUp, Zap, Droplets, Trash2, Check, AlertCircle } from "lucide-react";
+import { FACILITY_OPTIONS, getFacilityIconUrl } from "../../utils/facilityIcons.js";
 
+// Define feature categories with facility options - only include facilities with icons
 const featureCategories = [
   {
     id: "primary",
     title: "Primary Features",
     icon: "home",
     features: [
-      "Built in year",
       "Tv lounge",
       "Store room",
-      "Laundry room",
       "Study room",
-      "Dinning room",
+      "Dining room",
       "Drawing room",
-      "Powder room",
-      "Servant quarter",
       "Balcony",
       "Kitchen",
       "Corner plot",
-      "Basement",
-      "Furnished",
-      "Semi furnished"
+      "Basement"
     ]
   },
   {
@@ -32,6 +28,14 @@ const featureCategories = [
       "Sewerage",
       "Electricity",
       "Water supply"
+    ]
+  },
+  {
+    id: "appliances",
+    title: "Appliances",
+    icon: "🏠",
+    features: [
+      "Washing machine"
     ]
   }
 ];
@@ -183,6 +187,7 @@ const FeaturesAmenitiesModal = ({ isOpen, onClose, onConfirm, initialFeatures = 
                     <div className="p-4 grid grid-cols-2 gap-2">
                       {category.features.map((feature) => {
                         const isSelected = selectedFeatures.includes(feature);
+                        const facilityIconUrl = getFacilityIconUrl(feature);
                         return (
                           <button
                             key={feature}
@@ -193,7 +198,18 @@ const FeaturesAmenitiesModal = ({ isOpen, onClose, onConfirm, initialFeatures = 
                                 : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
                             }`}
                           >
-                            {isSelected && (
+                            {facilityIconUrl && (
+                              <img 
+                                src={facilityIconUrl} 
+                                alt={feature}
+                                onError={(e) => {
+                                  // Hide image if fails to load
+                                  e.target.style.display = 'none';
+                                }}
+                                className="w-4 h-4 flex-shrink-0 object-contain"
+                              />
+                            )}
+                            {isSelected && !facilityIconUrl && (
                               <Check className="w-4 h-4 text-red-500 flex-shrink-0" />
                             )}
                             <span className="truncate">{feature}</span>

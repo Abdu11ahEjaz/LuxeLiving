@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { usePageLoad } from "../hooks/usePageLoad.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -13,6 +15,7 @@ const CATEGORIES = [
 
 export const Buy = () => {
   // Data and UI state
+  const navigate = useNavigate();
   const [cities, setCities] = useState([]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +24,9 @@ export const Buy = () => {
   const [carousels, setCarousels] = useState({});
   const [imageIndices, setImageIndices] = useState({});
   const [cardsPerView, setCardsPerView] = useState(4);
+
+  // Show loading animation when fetching data
+  usePageLoad(loading);
 
   // Fetch approved sale properties on component mount
   useEffect(() => {
@@ -218,13 +224,21 @@ export const Buy = () => {
                         imageIndices[property._id] || 0;
                       const hasImages =
                         property.images && property.images.length > 0;
-                      const displayImage = hasImages
-                        ? property.images[currentImageIndex].url
-                        : "/images/ground.jpg";
+                      let displayImage = "/images/ground.jpg";
+                      
+                      if (hasImages) {
+                        const currentImage = property.images[currentImageIndex];
+                        if (typeof currentImage === 'string') {
+                          displayImage = currentImage;
+                        } else if (currentImage?.url) {
+                          displayImage = currentImage.url;
+                        }
+                      }
 
                       return (
                         <div
                           key={property._id || index}
+                          onClick={() => navigate(`/property/${property._id}`)}
                           className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col h-full"
                         >
                           {/* Image with Carousel */}

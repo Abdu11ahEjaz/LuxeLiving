@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { getFacilityIconUrl } from "../../utils/facilityIcons.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 import {
@@ -854,14 +855,27 @@ const SellProperty = ({ initialPurpose = "sell" }) => {
               {/* Selected features display */}
               {features.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {features.map((feature, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 text-sm rounded-full"
-                    >
-                      {feature}
-                    </span>
-                  ))}
+                  {features.map((feature, index) => {
+                    const facilityIconUrl = getFacilityIconUrl(feature);
+                    return (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 text-sm rounded-full"
+                      >
+                        {facilityIconUrl && (
+                          <img 
+                            src={facilityIconUrl} 
+                            alt={feature}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                            className="w-4 h-4 object-contain"
+                          />
+                        )}
+                        {feature}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1222,16 +1236,30 @@ const PhonePreview = ({
           <p className="text-sm font-bold text-gray-900 mb-3">Features</p>
           <div className="grid grid-cols-3 gap-2">
             {features && features.length > 0 ? (
-              features.slice(0, 5).map((feature, index) => (
-                <div key={index} className="text-center">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg mx-auto mb-1 flex items-center justify-center">
-                    <Check className="w-4 h-4 text-green-500" />
+              features.slice(0, 5).map((feature, index) => {
+                const facilityIconUrl = getFacilityIconUrl(feature);
+                return (
+                  <div key={index} className="text-center">
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg mx-auto mb-1 flex items-center justify-center">
+                      {facilityIconUrl ? (
+                        <img 
+                          src={facilityIconUrl}
+                          alt={feature}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                          className="w-6 h-6 object-contain"
+                        />
+                      ) : (
+                        <Check className="w-4 h-4 text-green-500" />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-gray-500 truncate px-1">
+                      {feature}
+                    </p>
                   </div>
-                  <p className="text-[10px] text-gray-500 truncate px-1">
-                    {feature}
-                  </p>
-                </div>
-              ))
+                );
+              })
             ) : (
               <>
                 {[1, 2, 3, 4, 5].map((i) => (

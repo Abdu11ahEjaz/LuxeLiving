@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageLoad } from "../hooks/usePageLoad.js";
 
 const Wanted = () => {
   const [activeTab, setActiveTab] = useState("buy");
@@ -14,6 +15,9 @@ const Wanted = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+
+  // Show loading animation when submitting form
+  usePageLoad(loading);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

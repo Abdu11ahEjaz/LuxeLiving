@@ -279,6 +279,38 @@ export const getFilteredProperties = async (req, res) => {
   }
 };
 
+// ============================
+// GET SINGLE PROPERTY BY ID (PUBLIC)
+// ============================
+export const getPropertyById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const property = await Property.findById(id)
+      .populate("owner", "name phone email");
+
+    if (!property) {
+      return res.status(404).json({
+        message: "Property not found"
+      });
+    }
+
+    // Only show approved properties to public users
+    if (property.approvalStatus !== "approved" && (!req.user || req.user._id.toString() !== property.owner._id.toString())) {
+      return res.status(403).json({
+        message: "This property is not available for viewing"
+      });
+    }
+
+    res.json(property);
+  } catch (error) {
+    console.error("Error fetching property by ID:", error);
+    res.status(500).json({
+      message: "Failed to fetch property details"
+    });
+  }
+};
+
 // import Property from "../models/property.js";
 
 // // CREATE PROPERTY (USER)

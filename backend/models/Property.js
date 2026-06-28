@@ -76,6 +76,11 @@ const propertySchema = new mongoose.Schema(
       type: String,
     },
 
+    // Map Embed URL (generated from address/coordinates)
+    mapEmbedUrl: {
+      type: String,
+    },
+
     // ROOMS (optional)
     bedrooms: {
       type: Number,

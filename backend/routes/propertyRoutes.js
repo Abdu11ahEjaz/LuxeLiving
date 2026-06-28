@@ -4,21 +4,22 @@ import {
   getApprovedProperties,
   getMyProperties,
   getFilteredProperties,
+  getPropertyById,
 } from "../controllers/propertyController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/upload.js";
 
 const router = express.Router();
 
-// Public routes for property browsing
-router.get("/", getApprovedProperties);
-router.get("/filter", getFilteredProperties);
+// Protected route for user's properties (must come before /:id)
+router.get("/my-properties", protect, getMyProperties);
 
-// Middleware logging for debugging
-router.use((req, res, next) => {
-  console.log("Property route hit:", req.method, req.originalUrl);
-  next();
-});
+// Public routes for property browsing (must come before /:id)
+router.get("/filter", getFilteredProperties);
+router.get("/", getApprovedProperties);
+
+// Get single property by ID (must be last)
+router.get("/:id", getPropertyById);
 
 // Protected route for property creation with file upload
 router.post(
@@ -42,8 +43,5 @@ router.post(
   },
   createProperty
 );
-
-// Protected route for user's properties
-router.get("/my-properties", protect, getMyProperties);
 
 export default router;

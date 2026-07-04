@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePageLoad } from "../hooks/usePageLoad.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -16,6 +16,7 @@ const CATEGORIES = [
 export const Buy = () => {
   // Data and UI state
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [cities, setCities] = useState([]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,10 +54,13 @@ export const Buy = () => {
         ].sort();
         setCities(uniqueCities);
 
-        // Initialize all categories as selected by default
+        // Get type from query parameter, default to showing all categories
+        const typeFromUrl = searchParams.get("type");
         const categoriesObj = {};
         uniqueCities.forEach((city) => {
-          categoriesObj[city] = ["residential", "commercial", "plot"];
+          // If type is specified in URL, only select that category
+          // Otherwise, show all categories
+          categoriesObj[city] = typeFromUrl ? [typeFromUrl] : ["residential", "commercial", "plot"];
         });
         setSelectedCategories(categoriesObj);
 
@@ -80,7 +84,7 @@ export const Buy = () => {
     };
 
     fetchProperties();
-  }, []);
+  }, [searchParams]);
 
   // Handle responsive cards per view
   useEffect(() => {

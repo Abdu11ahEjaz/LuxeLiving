@@ -13,7 +13,11 @@ export const FACILITY_ICONS = {
   'study room': 'https://res.cloudinary.com/dnrpwpdqv/image/upload/v1782638746/desk_cmugx3.png',
   'kitchen': 'https://res.cloudinary.com/dnrpwpdqv/image/upload/v1782638746/kitchen_iflfix.png',
   'store room': 'https://res.cloudinary.com/dnrpwpdqv/image/upload/v1782638746/storeRoom_b6khb4.png',
-};
+}
+
+// Note: All 13 facility types now have icons from Cloudinary.
+// These are the only facilities displayed in forms and property details.
+// Facilities without icons have been removed.
 
 // Get facility icon URL
 export const getFacilityIconUrl = (facilityName) => {

@@ -123,7 +123,7 @@ export const Headers = () => {
           } md:flex md:items-center md:gap-1 lg:gap-3`}
         >
           <ul className="flex flex-col md:flex-row gap-4 md:gap-1 lg:gap-2 text-base md:text-sm lg:text-base">
-            <NavItemWithDropdown to="/" label="Buy" options={dropdownOptions.buy} onClick={handleLinkClick} />
+            <NavItemWithDropdown to="/buy" label="Buy" options={dropdownOptions.buy} onClick={handleLinkClick} />
             <NavItemWithDropdown to="/sell" label="Sell" options={dropdownOptions.sell} onClick={handleLinkClick} />
             <NavItemWithDropdown to="/rent" label="Rent" options={dropdownOptions.rent} onClick={handleLinkClick} />
             <NavItemWithDropdown to="/invest" label="Invest" options={dropdownOptions.invest} onClick={handleLinkClick} />

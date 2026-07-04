@@ -10,7 +10,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api"
 const CATEGORIES = [
   { id: "residential", label: "Residential Properties" },
   { id: "commercial", label: "Commercial Properties" },
-  { id: "plot", label: "Plots" },
+  // { id: "plot", label: "Plots" },
 ];
 
 export const Rent = () => {
@@ -60,7 +60,8 @@ export const Rent = () => {
         uniqueCities.forEach((city) => {
           // If type is specified in URL, only select that category
           // Otherwise, show all categories
-          categoriesObj[city] = typeFromUrl ? [typeFromUrl] : ["residential", "commercial", "plot"];
+          categoriesObj[city] = typeFromUrl ? [typeFromUrl] : ["residential", "commercial"];
+          // ["residential", "commercial", "plot"];
         });
         setSelectedCategories(categoriesObj);
 

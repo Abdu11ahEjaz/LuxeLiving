@@ -28,6 +28,14 @@ const PropertyDetail = () => {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [nearbyProperties, setNearbyProperties] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const [inquiryForm, setInquiryForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+  const [submittingInquiry, setSubmittingInquiry] = useState(false);
 
   // Show loading animation when fetching property data
   usePageLoad(loading);
@@ -151,6 +159,45 @@ const PropertyDetail = () => {
     if (price >= 10000000) return `${(price / 10000000).toFixed(1)} Crore`;
     if (price >= 100000) return `${(price / 100000).toFixed(1)} Lac`;
     return `${price}`;
+  };
+
+  // Handle inquiry form submission
+  const handleInquirySubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!inquiryForm.name || !inquiryForm.email || !inquiryForm.phone || !inquiryForm.message) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    setSubmittingInquiry(true);
+    try {
+      // Send inquiry to backend
+      const inquiryData = {
+        propertyId: property._id,
+        propertyTitle: property.title,
+        propertyPrice: property.price,
+        propertyCity: property.city,
+        propertyArea: property.area,
+        ...inquiryForm,
+      };
+
+      const response = await axios.post(
+        `${API_BASE_URL}/inquiries`,
+        inquiryData
+      );
+
+      if (response.status === 201 || response.status === 200) {
+        alert("Inquiry submitted successfully! Admin will contact you soon.");
+        setShowInquiryModal(false);
+        setInquiryForm({ name: "", email: "", phone: "", message: "" });
+      }
+    } catch (err) {
+      console.error("Error submitting inquiry:", err);
+      alert("Failed to submit inquiry. Please try again.");
+    } finally {
+      setSubmittingInquiry(false);
+    }
   };
 
   // Map facility names to custom SVG icons
@@ -365,17 +412,31 @@ const PropertyDetail = () => {
 
           {/* Action Buttons */}
           <div className="flex gap-2 mt-3">
-            <button className="px-4 py-1.5 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 flex items-center gap-1 text-sm">
+            <a 
+              href={`tel:${property.phone}`}
+              className="px-4 py-1.5 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 flex items-center gap-1 text-sm transition-colors"
+            >
               <Phone size={16} />
               CALL
-            </button>
-            <button className="px-4 py-1.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-1 text-sm">
+            </a>
+            <button 
+              onClick={() => setShowInquiryModal(true)}
+              className="px-4 py-1.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-1 text-sm transition-colors"
+            >
               <Mail size={16} />
               INQUIRE
             </button>
-            <button className="px-4 py-1.5 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 text-sm">
+            <a 
+              href="https://wa.me/923005115153?text=Hello%20I%20am%20interested%20in%20your%20property%20listing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-1.5 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 text-sm transition-colors flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.782 1.14l-.046.027-4.783-.966.985 3.6-.047.06a9.861 9.861 0 00-1.516 5.231c0 5.487 4.144 9.92 9.263 9.92 2.498 0 4.845-.722 6.81-2.088l.046-.027 4.782.965-.983-3.598.047-.06a9.844 9.844 0 001.505-5.203c0-5.487-4.144-9.92-9.262-9.92" />
+              </svg>
               WhatsApp
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -578,6 +639,95 @@ const PropertyDetail = () => {
                   onClick={() => handleThumbnailClick(idx)}
                 />
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inquiry Modal */}
+      {showInquiryModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
+              <h2 className="text-xl font-bold text-gray-900">Get in touch</h2>
+              <button
+                onClick={() => setShowInquiryModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition"
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              <p className="text-gray-600 text-sm mb-6">
+                For more information, please fill out the form and our team will get back to you
+              </p>
+
+              <form onSubmit={handleInquirySubmit} className="space-y-4">
+                {/* Name Field */}
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Name*"
+                    value={inquiryForm.name}
+                    onChange={(e) => setInquiryForm({ ...inquiryForm, name: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                {/* Email Field */}
+                <div>
+                  <input
+                    type="email"
+                    placeholder="Email*"
+                    value={inquiryForm.email}
+                    onChange={(e) => setInquiryForm({ ...inquiryForm, email: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                {/* Phone Field */}
+                <div>
+                  <div className="flex">
+                    <div className="flex items-center gap-2 px-3 py-2.5 border border-r-0 border-gray-300 rounded-l-lg bg-gray-50">
+                      <span className="text-2xl">🇵🇰</span>
+                      <span className="text-gray-600">+92</span>
+                    </div>
+                    <input
+                      type="tel"
+                      placeholder="Phone Number*"
+                      value={inquiryForm.phone}
+                      onChange={(e) => setInquiryForm({ ...inquiryForm, phone: e.target.value })}
+                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Message Field */}
+                <div>
+                  <textarea
+                    placeholder={`I am interested in ${property.title} in ${property.area}, ${property.city}. Please contact me at your earliest convenience.`}
+                    value={inquiryForm.message}
+                    onChange={(e) => setInquiryForm({ ...inquiryForm, message: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none h-24"
+                    required
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={submittingInquiry}
+                  className="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingInquiry ? "SENDING..." : "REQUEST INFO"}
+                </button>
+              </form>
             </div>
           </div>
         </div>

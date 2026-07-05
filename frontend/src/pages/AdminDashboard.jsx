@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import AreaManagement from "../components/Admin/AreaManagement.jsx";
 import { usePageLoad } from "../hooks/usePageLoad.js";
+import { Mail, MessageSquare, Phone, MapPin, Calendar, Trash2 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -10,11 +11,15 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [properties, setProperties] = useState([]);
   const [users, setUsers] = useState([]);
+  const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [approving, setApproving] = useState({});
   const [deleting, setDeleting] = useState({});
+  const [deletingInquiry, setDeletingInquiry] = useState({});
   const [showMessage, setShowMessage] = useState("");
+  const [inquiryStatusFilter, setInquiryStatusFilter] = useState("");
+  const [selectedInquiry, setSelectedInquiry] = useState(null);
   const fetchTimeoutRef = useRef(null);
 
   // Show loading animation when fetching admin data
@@ -62,10 +67,19 @@ const AdminDashboard = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers(res.data || []);
+      } else if (activeTab === "inquiries") {
+        const res = await axios.get(`${API_BASE_URL}/inquiries`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setInquiries(res.data || []);
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
-      setProperties([]);
+      if (activeTab === "inquiries") {
+        setInquiries([]);
+      } else {
+        setProperties([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -171,6 +185,58 @@ const AdminDashboard = () => {
     }
   };
 
+  // Delete inquiry
+  const handleDeleteInquiry = async (inquiryId) => {
+    if (!window.confirm("Are you sure you want to delete this inquiry?")) return;
+
+    setDeletingInquiry(prev => ({ ...prev, [inquiryId]: true }));
+
+    try {
+      await axios.delete(`${API_BASE_URL}/inquiries/${inquiryId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setShowMessage("Inquiry has been deleted");
+      setTimeout(() => setShowMessage(""), 2500);
+      setInquiries(prev => prev.filter(i => i._id !== inquiryId));
+      setSelectedInquiry(null);
+
+    } catch (error) {
+      console.error("Failed to delete inquiry:", error);
+      setShowMessage("Failed to delete inquiry");
+      setTimeout(() => setShowMessage(""), 2500);
+    } finally {
+      setDeletingInquiry(prev => ({ ...prev, [inquiryId]: false }));
+    }
+  };
+
+  // Update inquiry status
+  const handleUpdateInquiryStatus = async (inquiryId, newStatus) => {
+    try {
+      const res = await axios.patch(
+        `${API_BASE_URL}/inquiries/${inquiryId}`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setInquiries(prev =>
+        prev.map(i => i._id === inquiryId ? { ...i, status: newStatus } : i)
+      );
+      
+      if (selectedInquiry && selectedInquiry._id === inquiryId) {
+        setSelectedInquiry(prev => ({ ...prev, status: newStatus }));
+      }
+
+      setShowMessage(`Inquiry status updated to ${newStatus}`);
+      setTimeout(() => setShowMessage(""), 2500);
+
+    } catch (error) {
+      console.error("Failed to update inquiry:", error);
+      setShowMessage("Failed to update inquiry status");
+      setTimeout(() => setShowMessage(""), 2500);
+    }
+  };
+
   // Handle search form submission
   const handleSearch = (e) => {
     e.preventDefault();
@@ -234,6 +300,12 @@ const AdminDashboard = () => {
             className={`px-6 py-3 font-medium whitespace-nowrap ${activeTab === "areas" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700"}`}
           >
             Manage Areas
+          </button>
+          <button
+            onClick={() => setActiveTab("inquiries")}
+            className={`px-6 py-3 font-medium whitespace-nowrap ${activeTab === "inquiries" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            Inquiries ({inquiries.length})
           </button>
         </div>
       </div>
@@ -595,6 +667,184 @@ const AdminDashboard = () => {
 
         {activeTab === "areas" && (
           <AreaManagement />
+        )}
+
+        {activeTab === "inquiries" && (
+          <div>
+            <div className="mb-4">
+              <div className="flex gap-3 items-center">
+                <select
+                  value={inquiryStatusFilter}
+                  onChange={(e) => setInquiryStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm"
+                >
+                  <option value="">All Inquiries ({inquiries.length})</option>
+                  <option value="new">New ({inquiries.filter(i => i.status === "new").length})</option>
+                  <option value="contacted">Contacted ({inquiries.filter(i => i.status === "contacted").length})</option>
+                  <option value="resolved">Resolved ({inquiries.filter(i => i.status === "resolved").length})</option>
+                </select>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin">
+                  <div className="h-8 w-8 border-4 border-red-600 border-t-transparent rounded-full"></div>
+                </div>
+                <p className="text-gray-500 mt-4">Loading inquiries...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Inquiries List */}
+                <div className="lg:col-span-1 bg-white rounded-lg shadow overflow-hidden max-h-[600px] overflow-y-auto">
+                  {(inquiryStatusFilter ? inquiries.filter(i => i.status === inquiryStatusFilter) : inquiries).length === 0 ? (
+                    <div className="p-6 text-center text-gray-500">
+                      <p>No inquiries found</p>
+                    </div>
+                  ) : (
+                    (inquiryStatusFilter ? inquiries.filter(i => i.status === inquiryStatusFilter) : inquiries).map(inquiry => (
+                      <button
+                        key={inquiry._id}
+                        onClick={() => setSelectedInquiry(inquiry)}
+                        className={`w-full p-4 text-left border-b hover:bg-red-50 transition ${
+                          selectedInquiry?._id === inquiry._id ? "bg-red-100 border-l-4 border-l-red-600" : ""
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-semibold text-gray-900 truncate">{inquiry.name}</h4>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            inquiry.status === "new" ? "bg-blue-100 text-blue-800" :
+                            inquiry.status === "contacted" ? "bg-yellow-100 text-yellow-800" :
+                            "bg-green-100 text-green-800"
+                          }`}>
+                            {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 truncate mb-1">{inquiry.propertyTitle}</p>
+                        <p className="text-xs text-gray-500">{inquiry.email}</p>
+                      </button>
+                    ))
+                  )}
+                </div>
+
+                {/* Inquiry Details */}
+                {selectedInquiry ? (
+                  <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
+                    {/* Header */}
+                    <div className="flex justify-between items-start mb-6 pb-4 border-b">
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900">{selectedInquiry.name}</h3>
+                        <p className="text-sm text-gray-500 mt-1">Inquiry ID: {selectedInquiry._id}</p>
+                      </div>
+                      <select
+                        value={selectedInquiry.status}
+                        onChange={(e) => handleUpdateInquiryStatus(selectedInquiry._id, e.target.value)}
+                        className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                      >
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="resolved">Resolved</option>
+                      </select>
+                    </div>
+
+                    {/* Property Info */}
+                    <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                      <h4 className="font-semibold text-gray-900 mb-3">Property Information</h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-600">Property</p>
+                          <p className="font-medium text-gray-900">{selectedInquiry.propertyTitle}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Price</p>
+                          <p className="font-medium text-gray-900">PKR {selectedInquiry.propertyPrice?.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Location</p>
+                          <p className="font-medium text-gray-900">{selectedInquiry.propertyArea}, {selectedInquiry.propertyCity}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Customer Contact Info */}
+                    <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                      <h4 className="font-semibold text-gray-900 mb-4">Customer Information</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Mail className="w-5 h-5 text-red-600" />
+                          <div>
+                            <p className="text-xs text-gray-600">Email</p>
+                            <a href={`mailto:${selectedInquiry.email}`} className="text-sm font-medium text-blue-600 hover:underline">
+                              {selectedInquiry.email}
+                            </a>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Phone className="w-5 h-5 text-red-600" />
+                          <div>
+                            <p className="text-xs text-gray-600">Phone</p>
+                            <a href={`tel:+92${selectedInquiry.phone}`} className="text-sm font-medium text-blue-600 hover:underline">
+                              +92{selectedInquiry.phone}
+                            </a>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <Calendar className="w-5 h-5 text-red-600 mt-1" />
+                          <div>
+                            <p className="text-xs text-gray-600">Submitted</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {new Date(selectedInquiry.createdAt).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Message */}
+                    <div className="mb-6">
+                      <h4 className="font-semibold text-gray-900 mb-3">Message</h4>
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedInquiry.message}</p>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      <a
+                        href={`mailto:${selectedInquiry.email}?subject=Re: Your Property Inquiry`}
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center font-medium text-sm"
+                      >
+                        Reply via Email
+                      </a>
+                      <a
+                        href={`https://wa.me/92${selectedInquiry.phone}?text=Hi%20${encodeURIComponent(selectedInquiry.name)},%20Thank%20you%20for%20your%20inquiry.`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center font-medium text-sm"
+                      >
+                        WhatsApp
+                      </a>
+                      <button
+                        onClick={() => handleDeleteInquiry(selectedInquiry._id)}
+                        disabled={deletingInquiry[selectedInquiry._id]}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition font-medium text-sm flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {deletingInquiry[selectedInquiry._id] ? "..." : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="lg:col-span-2 bg-white rounded-lg shadow p-12 flex items-center justify-center">
+                    <div className="text-center">
+                      <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500 text-lg">Select an inquiry to view details</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

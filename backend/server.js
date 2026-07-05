@@ -9,7 +9,8 @@ import propertyRoutes from "./routes/propertyRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import wantedRoutes from "./routes/wantedRoutes.js";
 import areaRoutes from "./routes/areaRoutes.js";
-      
+import inquiryRoutes from "./routes/inquiryRoutes.js";
+       
 dotenv.config();    
    
 // connectDB();
@@ -31,8 +32,9 @@ app.use("/api/favorites", favoriteRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/properties", wantedRoutes);
 app.use("/api/areas", areaRoutes);
+app.use("/api/inquiries", inquiryRoutes);
    
-mongoose
+mongoose 
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connected successfully");

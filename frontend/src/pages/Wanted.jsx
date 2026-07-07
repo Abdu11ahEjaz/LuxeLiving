@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { usePageLoad } from "../hooks/usePageLoad.js";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const Wanted = () => {
   const [activeTab, setActiveTab] = useState("buy");
@@ -15,9 +18,52 @@ const Wanted = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [cities, setCities] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [citiesLoading, setCitiesLoading] = useState(true);
 
   // Show loading animation when submitting form
   usePageLoad(loading);
+
+  // Fetch cities on component mount
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/areas/cities`);
+        const citiesList = res.data || [];
+        setCities(citiesList);
+      } catch (error) {
+        console.error("Failed to fetch cities:", error);
+      } finally {
+        setCitiesLoading(false);
+      }
+    };
+
+    fetchCities();
+  }, []);
+
+  // Fetch areas when city changes
+  useEffect(() => {
+    if (!formData.city) {
+      setAreas([]);
+      return;
+    }
+
+    const fetchAreas = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/areas/city/${encodeURIComponent(formData.city)}`);
+        const areasList = res.data || [];
+        setAreas(areasList);
+        // Reset area selection when city changes
+        setFormData((prev) => ({ ...prev, area: "" }));
+      } catch (error) {
+        console.error("Failed to fetch areas:", error);
+        setAreas([]);
+      }
+    };
+
+    fetchAreas();
+  }, [formData.city]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -186,13 +232,15 @@ const Wanted = () => {
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded bg-white text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-red-400 text-sm"
+                disabled={citiesLoading}
+                className="w-full px-4 py-3 border border-gray-300 rounded bg-white text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-red-400 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="">City of Interest *</option>
-                <option value="lahore">Lahore</option>
-                <option value="karachi">Karachi</option>
-                <option value="islamabad">Islamabad</option>
-                <option value="rawalpindi">Rawalpindi</option>
+                {cities.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
               </select>
               <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -204,13 +252,15 @@ const Wanted = () => {
                 name="area"
                 value={formData.area}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded bg-white text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-red-400 text-sm"
+                disabled={!formData.city || areas.length === 0}
+                className="w-full px-4 py-3 border border-gray-300 rounded bg-white text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-red-400 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="">Area of Interest *</option>
-                <option value="dha">DHA</option>
-                <option value="bahria">Bahria Town</option>
-                <option value="gulberg">Gulberg</option>
-                <option value="model-town">Model Town</option>
+                {areas.map((area) => (
+                  <option key={area._id} value={area.name}>
+                    {area.name}
+                  </option>
+                ))}
               </select>
               <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

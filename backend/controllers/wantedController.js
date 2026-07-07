@@ -109,3 +109,32 @@ export const updateInquiryStatus = async (req, res) => {
     });
   }
 };
+
+
+// Delete inquiry (admin only)
+export const deleteWantedInquiry = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const inquiry = await Wanted.findByIdAndDelete(id);
+
+    if (!inquiry) {
+      return res.status(404).json({
+        success: false,
+        message: "Inquiry not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Inquiry deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting inquiry:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while deleting inquiry",
+      error: error.message,
+    });
+  }
+};

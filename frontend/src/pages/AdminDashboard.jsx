@@ -12,14 +12,18 @@ const AdminDashboard = () => {
   const [properties, setProperties] = useState([]);
   const [users, setUsers] = useState([]);
   const [inquiries, setInquiries] = useState([]);
+  const [wanted, setWanted] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [approving, setApproving] = useState({});
   const [deleting, setDeleting] = useState({});
   const [deletingInquiry, setDeletingInquiry] = useState({});
+  const [deletingWanted, setDeletingWanted] = useState({});
   const [showMessage, setShowMessage] = useState("");
   const [inquiryStatusFilter, setInquiryStatusFilter] = useState("");
+  const [wantedStatusFilter, setWantedStatusFilter] = useState("");
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [selectedWanted, setSelectedWanted] = useState(null);
   const fetchTimeoutRef = useRef(null);
 
   // Show loading animation when fetching admin data
@@ -57,38 +61,45 @@ const AdminDashboard = () => {
           params.set("approvalStatus", "pending");
         }
 
-        const res = await axios.get(`${API_BASE_URL}/admin/properties?${params}`, {
+        const response = await axios.get(`${API_BASE_URL}/admin/properties?${params}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        setProperties(res.data || []);
+        setProperties(response.data || []);
       } else if (activeTab === "users") {
-        const res = await axios.get(`${API_BASE_URL}/admin/users`, {
+        const response = await axios.get(`${API_BASE_URL}/admin/users`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setUsers(res.data || []);
+        setUsers(response.data || []);
       } else if (activeTab === "inquiries") {
-        const res = await axios.get(`${API_BASE_URL}/inquiries`, {
+        const response = await axios.get(`${API_BASE_URL}/inquiries`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setInquiries(res.data || []);
+        setInquiries(response.data || []);
+      } else if (activeTab === "wanted") {
+        const response = await axios.get(`${API_BASE_URL}/properties/wanted`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setWanted(response.data.data || []);
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
       if (activeTab === "inquiries") {
         setInquiries([]);
+      } else if (activeTab === "wanted") {
+        setWanted([]);
       } else {
         setProperties([]);
       }
     } finally {
       setLoading(false);
     }
-  }, [activeTab, token]);
+  }, [activeTab, token, searchTerm, filters]);
 
   // Fetch data when tab changes
   useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, [fetchData]);
 
   // Debounced fetch for filter and search changes
   useEffect(() => {
@@ -265,8 +276,8 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 mt-20">
-      <div className="bg-red-600 text-white p-4">
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      <div className="bg-red-600 text-white p-4 text-center">
+        <h1 className="text-2xl font-bold">ADMIN DASHBOARD</h1>
       </div>
 
       <div className="bg-white shadow">
@@ -306,6 +317,12 @@ const AdminDashboard = () => {
             className={`px-6 py-3 font-medium whitespace-nowrap ${activeTab === "inquiries" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700"}`}
           >
             Inquiries ({inquiries.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("wanted")}
+            className={`px-6 py-3 font-medium whitespace-nowrap ${activeTab === "wanted" ? "border-b-2 border-red-600 text-red-600" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            Wanted ({wanted.length})
           </button>
         </div>
       </div>
@@ -545,7 +562,7 @@ const AdminDashboard = () => {
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600 capitalize">{property.mainCategory}</td>
                         <td className="px-4 py-3 text-sm text-gray-600">{property.city}</td>
-                        <td className="px-4 py-3 text-sm font-semibold text-gray-900">PKR {property.price.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-gray-900">PKR {(property.price ?? 0).toLocaleString()}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-1 text-xs rounded-full font-medium ${
                             property.approvalStatus === "approved" ? "bg-green-100 text-green-800" : 
@@ -817,7 +834,7 @@ const AdminDashboard = () => {
                         Reply via Email
                       </a>
                       <a
-                        href={`https://wa.me/92${selectedInquiry.phone}?text=Hi%20${encodeURIComponent(selectedInquiry.name)},%20Thank%20you%20for%20your%20inquiry.`}
+                        href={`https://wa.me/92${selectedInquiry.phone}?text=Hi%20${encodeURIComponent(selectedInquiry.name)}%2C%20Thank%20you%20for%20your%20inquiry.`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center font-medium text-sm"
@@ -844,6 +861,212 @@ const AdminDashboard = () => {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === "wanted" && (
+          <div>
+            <div className="mb-4 flex gap-2">
+              <select
+                value={wantedStatusFilter}
+                onChange={(e) => setWantedStatusFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="">All Statuses</option>
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="resolved">Resolved</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Wanted List */}
+              <div className="lg:col-span-1 bg-white rounded-lg shadow overflow-hidden">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="font-semibold text-gray-900">Wanted Inquiries</h3>
+                  <p className="text-xs text-gray-500 mt-1">Total: {wanted.length}</p>
+                </div>
+
+                <div className="max-h-96 overflow-y-auto">
+                  {wanted.filter(w => !wantedStatusFilter || w.status === wantedStatusFilter).length > 0 ? (
+                    wanted.filter(w => !wantedStatusFilter || w.status === wantedStatusFilter).map((inquiry) => (
+                      <button
+                        key={inquiry._id}
+                        onClick={() => setSelectedWanted(inquiry)}
+                        className={`w-full p-4 text-left border-b hover:bg-red-50 transition ${
+                          selectedWanted?._id === inquiry._id ? "bg-red-100 border-l-4 border-l-red-600" : ""
+                        }`}
+                      >
+                        <p className="font-medium text-gray-900">{inquiry.name}</p>
+                        <p className="text-xs text-gray-600">{inquiry.type === "buy" ? "Want to Buy" : "Want to Rent"}</p>
+                        <p className="text-xs text-gray-500">{inquiry.city}, {inquiry.area}</p>
+                        <span className={`inline-block mt-2 px-2 py-1 text-xs rounded font-medium ${
+                          inquiry.status === "new" ? "bg-blue-100 text-blue-700" :
+                          inquiry.status === "contacted" ? "bg-yellow-100 text-yellow-700" :
+                          "bg-green-100 text-green-700"
+                        }`}>
+                          {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      No inquiries found
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Wanted Details */}
+              {selectedWanted ? (
+                <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
+                  {/* Header */}
+                  <div className="flex justify-between items-start mb-6 pb-4 border-b">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">{selectedWanted.name}</h3>
+                      <p className="text-sm text-gray-500 mt-1">Inquiry ID: {selectedWanted._id}</p>
+                    </div>
+                    <select
+                      value={selectedWanted.status}
+                      onChange={(e) => {
+                        const newStatus = e.target.value;
+                        axios.patch(
+                          `${API_BASE_URL}/properties/wanted/${selectedWanted._id}`,
+                          { status: newStatus },
+                          { headers: { Authorization: `Bearer ${token}` } }
+                        ).then(() => {
+                          setSelectedWanted({...selectedWanted, status: newStatus});
+                          setWanted(prev => prev.map(w => w._id === selectedWanted._id ? {...w, status: newStatus} : w));
+                          setShowMessage("Status updated successfully");
+                        }).catch(err => console.error("Error updating status:", err));
+                      }}
+                      className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                      <option value="new">New</option>
+                      <option value="contacted">Contacted</option>
+                      <option value="resolved">Resolved</option>
+                    </select>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="space-y-6">
+                    {/* What They Want */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-red-600" />
+                        What They're Looking For
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-gray-600 text-sm">Type</p>
+                          <p className="font-medium text-gray-900">{selectedWanted.type === "buy" ? "Want to Buy" : "Want to Rent"}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Property Type</p>
+                          <p className="font-medium text-gray-900">{selectedWanted.propertyType?.charAt(0).toUpperCase() + selectedWanted.propertyType?.slice(1)}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Location</p>
+                          <p className="font-medium text-gray-900">{selectedWanted.area}, {selectedWanted.city}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-sm">Status</p>
+                          <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                            selectedWanted.status === "new" ? "bg-blue-100 text-blue-700" :
+                            selectedWanted.status === "contacted" ? "bg-yellow-100 text-yellow-700" :
+                            "bg-green-100 text-green-700"
+                          }`}>
+                            {selectedWanted.status.charAt(0).toUpperCase() + selectedWanted.status.slice(1)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contact Information */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <Phone className="w-5 h-5 text-red-600" />
+                        Contact Information
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-gray-600">Phone</p>
+                          <a href={`tel:${selectedWanted.phone}`} className="text-sm font-medium text-blue-600 hover:underline">
+                            {selectedWanted.phone}
+                          </a>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-600">Submitted</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {new Date(selectedWanted.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Additional Details */}
+                    {selectedWanted.details && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3">Additional Details</h4>
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedWanted.details}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 mt-6">
+                    <a
+                      href={`tel:${selectedWanted.phone}`}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center font-medium text-sm flex items-center justify-center gap-2"
+                    >
+                      <Phone className="w-4 h-4" />
+                      Call
+                    </a>
+                    <a
+                      href={`https://wa.me/${selectedWanted.phone}?text=Hi%20${encodeURIComponent(selectedWanted.name)}%2C%20Thank%20you%20for%20your%20inquiry.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center font-medium text-sm flex items-center justify-center gap-2"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      WhatsApp
+                    </a>
+                    <button
+                      onClick={() => {
+                        setDeletingWanted(prev => ({...prev, [selectedWanted._id]: true}));
+                        axios.delete(
+                          `${API_BASE_URL}/properties/wanted/${selectedWanted._id}`,
+                          { headers: { Authorization: `Bearer ${token}` } }
+                        ).then(() => {
+                          setShowMessage("Inquiry deleted successfully");
+                          setWanted(prev => prev.filter(w => w._id !== selectedWanted._id));
+                          setSelectedWanted(null);
+                        }).catch(err => {
+                          console.error("Error deleting:", err);
+                          setShowMessage("Failed to delete inquiry");
+                        }).finally(() => {
+                          setDeletingWanted(prev => ({...prev, [selectedWanted._id]: false}));
+                        });
+                      }}
+                      disabled={deletingWanted[selectedWanted._id]}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition font-medium text-sm flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {deletingWanted[selectedWanted._id] ? "..." : "Delete"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="lg:col-span-2 bg-white rounded-lg shadow p-12 flex items-center justify-center">
+                  <div className="text-center">
+                    <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">Select an inquiry to view details</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

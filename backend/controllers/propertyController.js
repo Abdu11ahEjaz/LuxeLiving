@@ -3,47 +3,6 @@ import Property from "../models/Property.js";
 // ============================
 // CREATE PROPERTY (USER)
 // ============================
-// export const createProperty = async (req, res) => {
-//   try {
-//     console.log("Uploaded files:", req.files);
-//     // Handle Cloudinary images
-//     // const images = req.files?.map((file) => ({
-//     //   url: file.path,
-//     //   public_id: file.filename
-//     // }));
-
-//     // Handle Cloudinary images
-//     const images = req.files
-//       ? req.files.map((file) => ({
-//           url: file.path,
-//           public_id: file.filename,
-//         }))
-//       : [];
-
-//     const property = await Property.create({
-//       ...req.body,
-//       images, // Cloudinary images
-//       owner: req.user.id, // from JWT
-//       approvalStatus: "pending",
-//     });
-
-//     console.log("User from token:", req.user);
-//     console.log("Request body:", req.body);
-//     console.log("Uploaded files:", req.files);
-
-//     res.status(201).json({
-//       message: "Property submitted for approval",
-//       property,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       message: "Failed to create property",
-//       error: error.message,
-//     });
-//   }
-// };
-
-
 export const createProperty = async (req, res) => {
   try {
     // Parse JSON fields if they are strings
@@ -67,7 +26,6 @@ export const createProperty = async (req, res) => {
     const missingFields = requiredFields.filter(field => !req.body[field]);
 
     if (missingFields.length > 0) {
-      console.error("Missing required fields:", missingFields);
       return res.status(400).json({
         message: "Missing required fields",
         missingFields,
@@ -99,24 +57,17 @@ export const createProperty = async (req, res) => {
       approvalStatus: "pending"
     };
 
-    console.log("Creating property with data:", propertyData);
-
     const property = await Property.create(propertyData);
-
-    console.log("Property created successfully:", property._id);
 
     res.status(201).json({
       message: "Property submitted for approval",
       property
     });
   } catch (error) {
-    console.error("Failed to create property:", error.message);
-
     if (error.name === "ValidationError") {
       const validationErrors = {};
       for (let field in error.errors) {
         validationErrors[field] = error.errors[field].message;
-        console.error(`Validation error on ${field}: ${error.errors[field].message}`);
       }
       return res.status(400).json({
         message: "Validation error",
@@ -132,31 +83,63 @@ export const createProperty = async (req, res) => {
 };
 
 // ============================
-// GET ALL APPROVED PROPERTIES (PUBLIC)
+// GET ALL APPROVED PROPERTIES (PUBLIC) - WITH PAGINATION
 // ============================
 export const getApprovedProperties = async (req, res) => {
   try {
-    const properties = await Property.find({
+    const { page = 1, limit = 20, purpose } = req.query;
+    const pageNum = Math.max(1, Number(page));
+    const limitNum = Math.min(100, Math.max(1, Number(limit))); // Cap at 100 per page
+
+    // Build filter - always approved and active
+    let filter = {
       approvalStatus: "approved",
       isActive: true,
-    }).populate("owner", "name");
+    };
 
-    res.json(properties);
+    // Add purpose filter if provided (sale or rent)
+    if (purpose && ["sale", "rent"].includes(purpose)) {
+      filter.purpose = purpose;
+    }
+
+    const properties = await Property.find(filter)
+      .select("title price city area images bedrooms bathrooms purpose mainCategory subCategory createdAt")
+      .populate("owner", "name")
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .lean();
+
+    const total = await Property.countDocuments(filter);
+
+    const response = {
+      total,
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
+      limit: limitNum,
+      properties,
+    };
+
+    res.json(response);
   } catch (error) {
     res.status(500).json({
       message: "Failed to fetch properties",
+      error: error.message
     });
   }
 };
 
 // ============================
-// GET LOGGED-IN USER PROPERTIES
+// GET LOGGED-IN USER PROPERTIES - WITH OPTIMIZATION
 // ============================
 export const getMyProperties = async (req, res) => {
   try {
     const properties = await Property.find({
       owner: req.user.id,
-    });
+    })
+      .select("title price city area images approvalStatus isActive createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.json(properties);
   } catch (error) {
@@ -167,12 +150,12 @@ export const getMyProperties = async (req, res) => {
 };
 
 // ============================
-// GET FILTERED PROPERTIES (PUBLIC)
+// GET FILTERED PROPERTIES (PUBLIC) - WITH OPTIMIZATION
 // ============================
 export const getRecentApprovedByAreas = async (req, res) => {
   try {
-    const { areas: areaList } = req.query; // comma-separated: Peshawar,Rawalpindi
-    const areas = areaList ? areaList.split(',') : [];
+    const { areas: areaList } = req.query;
+    const areas = areaList ? areaList.split(',').map(a => a.trim()).filter(Boolean) : [];
     
     if (areas.length === 0) {
       return res.json({});
@@ -185,10 +168,25 @@ export const getRecentApprovedByAreas = async (req, res) => {
     };
 
     // Aggregate: group by area, top 7 recent per area
+    // Added $project to shrink documents before grouping for better memory efficiency
     const result = await Property.aggregate([
       { $match: baseQuery },
       { $match: { area: { $in: areas } } },
       { $sort: { createdAt: -1 } },
+      {
+        $project: {
+          title: 1,
+          price: 1,
+          city: 1,
+          area: 1,
+          images: 1,
+          bedrooms: 1,
+          bathrooms: 1,
+          purpose: 1,
+          mainCategory: 1,
+          createdAt: 1
+        }
+      },
       {
         $group: {
           _id: "$area",
@@ -198,7 +196,7 @@ export const getRecentApprovedByAreas = async (req, res) => {
       },
       {
         $addFields: {
-          properties: { $slice: ["$properties", 7] } // top 7
+          properties: { $slice: ["$properties", 7] }
         }
       },
       {
@@ -219,7 +217,6 @@ export const getRecentApprovedByAreas = async (req, res) => {
 
     res.json(grouped);
   } catch (error) {
-    console.error("Group by area error:", error);
     res.status(500).json({ message: "Failed to fetch grouped properties" });
   }
 };
@@ -235,9 +232,11 @@ export const getFilteredProperties = async (req, res) => {
       minPrice,
       maxPrice,
       page = 1,
-      limit = 10,
+      limit = 20,
     } = req.query;
 
+    const pageNum = Math.max(1, Number(page));
+    const limitNum = Math.min(100, Math.max(1, Number(limit))); // Cap at 100 per page
 
     // Base filter
     let filter = {
@@ -258,21 +257,23 @@ export const getFilteredProperties = async (req, res) => {
     }
 
     const properties = await Property.find(filter)
+      .select("title price city area images bedrooms bathrooms purpose mainCategory subCategory createdAt")
       .populate("owner", "name")
-      .skip((page - 1) * limit)
-      .limit(Number(limit))
-      .sort({ createdAt: -1 });
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .sort({ createdAt: -1 })
+      .lean();
 
     const total = await Property.countDocuments(filter);
 
     res.json({
       total,
-      page: Number(page),
-      pages: Math.ceil(total / limit),
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
+      limit: limitNum,
       properties,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({
       message: "Failed to fetch filtered properties",
     });
@@ -304,108 +305,8 @@ export const getPropertyById = async (req, res) => {
 
     res.json(property);
   } catch (error) {
-    console.error("Error fetching property by ID:", error);
     res.status(500).json({
       message: "Failed to fetch property details"
     });
   }
 };
-
-// import Property from "../models/property.js";
-
-// // CREATE PROPERTY (USER)
-// export const createProperty = async (req, res) => {
-//   try {
-//     const property = await Property.create({
-//       ...req.body,
-//       owner: req.user.id,   // from JWT
-//       approvalStatus: "pending"
-//     });
-
-//     res.status(201).json({
-//       message: "Property submitted for approval",
-//       property
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Failed to create property" });
-//   }
-// };
-
-// // GET ALL APPROVED PROPERTIES (PUBLIC)
-// export const getApprovedProperties = async (req, res) => {
-//   try {
-//     const properties = await Property.find({
-//       approvalStatus: "approved",
-//       isActive: true
-//     }).populate("owner", "name");
-
-//     res.json(properties);
-//   } catch (error) {
-//     res.status(500).json({ message: "Failed to fetch properties" });
-//   }
-// };
-
-// // GET LOGGED-IN USER PROPERTIES
-// export const getMyProperties = async (req, res) => {
-//   try {
-//     const properties = await Property.find({
-//       owner: req.user.id
-//     });
-
-//     res.json(properties);
-//   } catch (error) {
-//     res.status(500).json({ message: "Failed to fetch user properties" });
-//   }
-// };
-
-// // GET FILTERED PROPERTIES (PUBLIC)
-// export const getFilteredProperties = async (req, res) => {
-//   try {
-//     const {
-//       city,
-//       area,
-//       purpose,
-//       mainCategory,
-//       subCategory,
-//       minPrice,
-//       maxPrice,
-//       page = 1,
-//       limit = 10
-//     } = req.query;
-
-//     // Build filter object dynamically
-//     let filter = {
-//       approvalStatus: "approved",
-//       isActive: true
-//     };
-
-//     if (city) filter.city = city;
-//     if (area) filter.area = area;
-//     if (purpose) filter.purpose = purpose;
-//     if (mainCategory) filter.mainCategory = mainCategory;
-//     if (subCategory) filter.subCategory = subCategory;
-//     if (minPrice || maxPrice) {
-//       filter.price = {};
-//       if (minPrice) filter.price.$gte = Number(minPrice);
-//       if (maxPrice) filter.price.$lte = Number(maxPrice);
-//     }
-
-//     const properties = await Property.find(filter)
-//       .populate("owner", "name")
-//       .skip((page - 1) * limit)
-//       .limit(Number(limit))
-//       .sort({ createdAt: -1 });
-
-//     const total = await Property.countDocuments(filter);
-
-//     res.json({
-//       total,
-//       page: Number(page),
-//       pages: Math.ceil(total / limit),
-//       properties
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Failed to fetch filtered properties" });
-//   }
-// };

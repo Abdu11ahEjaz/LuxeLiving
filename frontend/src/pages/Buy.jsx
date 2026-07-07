@@ -34,28 +34,26 @@ export const Buy = () => {
     const fetchProperties = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(
-          `${API_BASE_URL}/properties?purpose=sale&limit=1000`
-        );
-        const propertiesData = res.data.properties || res.data;
+        
+        const apiUrl = `${API_BASE_URL}/properties?purpose=sale&page=1&limit=1000`;
+        const res = await axios.get(apiUrl);
+        
+        // New response structure: { properties: [...], total, page, pages, limit }
+        // Fallback to old structure (array) for compatibility
+        const propertiesData = Array.isArray(res.data) ? res.data : (res.data.properties || []);
 
-        // Filter to only approved sale properties
-        const saleProperties = Array.isArray(propertiesData)
-          ? propertiesData.filter(
-              (p) => p.purpose === "sale" && p.approvalStatus === "approved"
-            )
-          : [];
-
-        setProperties(saleProperties);
+        setProperties(propertiesData);
 
         // Extract and sort unique cities
         const uniqueCities = [
-          ...new Set(saleProperties.map((p) => p.city)),
+          ...new Set(propertiesData.map((p) => p.city)),
         ].sort();
+        
         setCities(uniqueCities);
 
         // Get type from query parameter, default to showing all categories
         const typeFromUrl = searchParams.get("type");
+        
         const categoriesObj = {};
         uniqueCities.forEach((city) => {
           // If type is specified in URL, only select that category
@@ -67,7 +65,7 @@ export const Buy = () => {
         // Initialize carousel indices and image indices
         const carouselIndices = {};
         const imgIndices = {};
-        saleProperties.forEach((prop) => {
+        propertiesData.forEach((prop) => {
           carouselIndices[prop._id] = 0;
           imgIndices[prop._id] = 0;
         });
@@ -76,7 +74,6 @@ export const Buy = () => {
 
         setError(null);
       } catch (err) {
-        console.error("Error fetching properties:", err);
         setError("Failed to load properties");
       } finally {
         setLoading(false);

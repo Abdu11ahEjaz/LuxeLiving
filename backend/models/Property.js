@@ -137,4 +137,23 @@ const propertySchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// ============================
+// PERFORMANCE INDEXES
+// ============================
+// Covers getApprovedProperties and base filter in getFilteredProperties
+propertySchema.index({ approvalStatus: 1, isActive: 1, createdAt: -1 });
+
+// Covers getFilteredProperties with city/area filters
+propertySchema.index({ approvalStatus: 1, isActive: 1, city: 1, createdAt: -1 });
+propertySchema.index({ approvalStatus: 1, isActive: 1, area: 1, createdAt: -1 });
+
+// Covers category-based queries
+propertySchema.index({ approvalStatus: 1, isActive: 1, mainCategory: 1, createdAt: -1 });
+
+// Covers getMyProperties
+propertySchema.index({ owner: 1, createdAt: -1 });
+
+// Covers price range queries
+propertySchema.index({ approvalStatus: 1, isActive: 1, price: 1 });
+
 export default mongoose.model("Property", propertySchema);

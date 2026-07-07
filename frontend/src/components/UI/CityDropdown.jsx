@@ -1,203 +1,41 @@
 import { useState, useRef, useEffect } from "react";
+import axios from "axios";
 
-const CityDropdown = () => {
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+const CityDropdown = ({ onCityChange }) => {
   const [open, setOpen] = useState(false);
-  const [selectedCity, setSelectedCity] = useState("Islamabad");
+  const [selectedCity, setSelectedCity] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [cities, setCities] = useState([]);
+  const [loading, setLoading] = useState(true);
   const dropdownRef = useRef(null);
 
-  const pakistaniCities = [
-    "Islamabad",
-    "Rawalpindi",
-    "Lahore",
-    "Karachi",
-    "Peshawar",
-    "Faisalabad",
-    "Multan",
-    "Gujranwala",
-    "Hyderabad",
-    "Quetta",
-    "Sialkot",
-    "Bahawalpur",
-    "Sukkur",
-    "Larkana",
-    "Kohat",
-    "Dera Ghazi Khan",
-    "Abbottabad",
-    "Muzaffarabad",
-    "Gilgit",
-    "Skardu",
-    "Mardan",
-    "Nowshera",
-    "Chakwal",
-    "Jhelum",
-    "Sargodha",
-    "Mianwali",
-    "Bhakkar",
-    "Layyah",
-    "Khushab",
-    "Toba Tek Singh",
-    "Gujrat",
-    "Mandi Bahauddin",
-    "Hafizabad",
-    "Narowal",
-    "Kasur",
-    "Okara",
-    "Pakpattan",
-    "Vehari",
-    "Lodhran",
-    "Khanewal",
-    "Bahawalnagar",
-    "Rahim Yar Khan",
-    "Sanghar",
-    "Mirpurkhas",
-    "Umerkot",
-    "Tharparkar",
-    "Badin",
-    "Thatta",
-    "Dadu",
-    "Naushahro Feroze",
-    "Kashmore",
-    "Ghotki",
-    "Jacobabad",
-    "Kamber Ali Khan",
-    "Khanpur",
-    "Zhob",
-    "Dera Ismail Khan",
-    "Tank",
-    "Karak",
-    "Bannu",
-    "Lakki Marwat",
-    "North Waziristan",
-    "South Waziristan",
-    "Kurram",
-    "Orakzai",
-    "Khyber",
-    "Mohmand",
-    "Bajaur",
-    "Malakand",
-    "Swat",
-    "Shangla",
-    "Buner",
-    "Kohistan",
-    "Mansehra",
-    "Haripur",
-    "Torghar",
-    "Attock",
-    "Kamoke",
-    "Muridke",
-    "Nankana Sahib",
-    "Sheikhupura",
-    "Sahiwal",
-    "Muzaffargarh",
-    "Rajanpur",
-    "Khewat",
-    "Talagang",
-    "Ahmadpur",
-    "Jhang",
-    "Tarnab",
-    "Jamshoro",
-    "Matiari",
-    "Tando Allahyar",
-    "Tando Muhammad Khan",
-    "Sujawal",
-    "Shikarpur",
-    "Shaheed Benazirabad",
-    "Qambar Shahdadkot",
-    "Mirpur",
-    "Swabi",
-    "Charsadda",
-    "Waziristan",
-    "Hangu",
-    "Ziarat",
-    "Chagai",
-    "Nushki",
-    "Kharan",
-    "Washuk",
-    "Awaran",
-    "Kech",
-    "Gwadar",
-    "Ormara",
-    "Pasni",
-    "Jiwani",
-    "Turbat",
-    "Wazirabad",
-    "Ferozewala",
-    "Murree",
-    "Kahuta",
-    "Kallar Syedan",
-    "Taxila",
-    "Wah Cantt",
-    "Haripur",
-    "Gujar Khan",
-    "Mandi Faizabad",
-    "Jalalpur Jattan",
-    "Sarai Alamgir",
-    "Pind Dadan Khan",
-    "Chunian",
-    "Khanqah Dogran",
-    "Raiwind",
-    "Shahpur",
-    "Kot Radha Kishan",
-    "Nankana Sahib",
-    "Chichawatni",
-    "Melsi",
-    "Kot Chutta",
-    "Darya Khan",
-    "Kalat",
-    "Khuzdar",
-    "Lasbela",
-    "Kohlu",
-    "Dera Bugti",
-    "Nasirabad",
-    "Jhal Magsi",
-    "Kacchi",
-    "Sherani",
-    "Zhob",
-    "Musakhel",
-    "Loralai",
-    "Duki",
-    "Dera Allah Yar",
-    "Kashmore",
-    "Shikarpur",
-    "Gandhara",
-    "Pabbi",
-    "Tajaz",
-    "Shahmansoor",
-    "Pir Sabaq",
-    "Kakki",
-    "Tangi",
-    "Balu",
-    "Akora Khattak",
-    "Jalalpur",
-    "Paharpur",
-    "Balkasar",
-    "Sakhakot",
-    "Malgri",
-    "Shahpur",
-    "Khatak",
-    "Bannu",
-    "Kakki",
-    "Sadda",
-    "Miramshah",
-    "Razmak",
-    "Spin Wam",
-    "Yakmach",
-    "Khuzdar",
-    "Hub",
-    "Gadani",
-    "Kotri",
-    "Buland Khan",
-    "Daro",
-    "Hala",
-    "Khipro",
-    "Samaro",
-    "Sui",
-    "Zahir Pir",
-  ];
+  // Fetch cities from Area database on component mount
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/areas/cities`);
+        const citiesList = res.data || [];
+        setCities(citiesList);
+        
+        // Set first city as default if available
+        if (citiesList.length > 0) {
+          setSelectedCity(citiesList[0]);
+          onCityChange(citiesList[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch cities:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCities();
+  }, [onCityChange]);
 
   // Filter cities based on search term
-  const filteredCities = pakistaniCities.filter((city) =>
+  const filteredCities = cities.filter((city) =>
     city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -220,13 +58,14 @@ const CityDropdown = () => {
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1 text-gray-700 font-medium"
+        disabled={loading}
       >
-        {selectedCity}
+        {loading ? "Loading..." : (selectedCity || "Select City")}
         <span className="text-red-500">▾</span>
       </button>
 
       {/* Dropdown menu */}
-      {open && (
+      {open && !loading && (
         <div className="absolute mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-hidden">
           {/* Search input */}
           <div className="p-2 border-b border-gray-200">
@@ -250,6 +89,7 @@ const CityDropdown = () => {
                     setSelectedCity(city);
                     setOpen(false);
                     setSearchTerm("");
+                    onCityChange(city);
                   }}
                   className={`px-4 py-2 hover:bg-red-50 cursor-pointer ${
                     selectedCity === city ? "bg-red-50 text-red-500 font-medium" : "text-gray-700"
